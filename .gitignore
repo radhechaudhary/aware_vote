@@ -3,7 +3,3 @@ node_modules/
 
 # Ignore all env files
 *.env
-
-# Ignore build folders
-dist/
-build/
