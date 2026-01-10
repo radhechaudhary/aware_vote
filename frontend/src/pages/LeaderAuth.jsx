@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -19,15 +20,55 @@ const LeaderAuth = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+  //   // Simulate API call
+  //   setTimeout(() => {
+  //     setIsLoading(false);
+  //     navigate("/leader-dashboard");
+  //   }, 1500);
+  // };
+
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+
+  try {
+    const url = isLogin
+      ? "http://localhost:3000/leader/login"
+      : "http://localhost:3000/leader/signup";
+
+    const payload = isLogin
+      ? {
+          email: formData.email,
+          password: formData.password,
+        }
+      : {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        };
+
+    const res = await axios.post(url, payload);
+
+    setIsLoading(false);
+
+    if (isLogin) {
+      // Save token
+      localStorage.setItem("leaderToken", res.data.token);
       navigate("/leader-dashboard");
-    }, 1500);
-  };
+    } else {
+      alert("Signup successful. Please login.");
+      setIsLogin(true);
+    }
+  } catch (err) {
+    setIsLoading(false);
+    alert(err.response?.data?.message || "Backend not responding");
+  }
+};
+
 
   return (
     <div className="min-h-screen hero-gradient flex items-center justify-center p-4 pt-24">
