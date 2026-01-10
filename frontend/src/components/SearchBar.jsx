@@ -55,14 +55,13 @@ const SearchBar = ({ onSearch }) => {
             placeholder={`Search by ${activeTab === "all" ? "city, district, state, or leader name" : activeTab}...`}
             className="w-full pl-14 pr-32 py-4 rounded-2xl bg-card border border-border shadow-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
           />
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
+            
             type="submit"
-            className="absolute right-2 top-1/2 -translate-y-1/2 px-6 py-2.5 rounded-xl gradient-bg text-primary-foreground font-medium"
+            className="absolute right-2 top-1/2 -translate-y-1/2 px-6 py-2.5 rounded-xl gradient-bg text-primary-foreground font-medium hover:scale-105 active:scale-96 transition-all"
           >
             Search
-          </motion.button>
+          </button>
         </div>
       </form>
     </motion.div>

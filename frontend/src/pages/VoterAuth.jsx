@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Shield, User, Phone, ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
+import axios from 'axios';
 
 const VoterAuth = () => {
   const [step, setStep] = useState(1);
   const [voterId, setVoterId] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(true);
   const navigate = useNavigate();
 
   const handleOtpChange = (index, value) => {
@@ -26,7 +28,8 @@ const VoterAuth = () => {
     e.preventDefault();
     if (!voterId.trim()) return;
     setIsLoading(true);
-    // Simulate API call
+    axios.post('http://localhost:3000/voter-auth/send-otp', ({ voterId }))
+    .catch(err=>{console.log(err)})
     setTimeout(() => {
       setIsLoading(false);
       setStep(2);
@@ -39,6 +42,20 @@ const VoterAuth = () => {
     if (enteredOtp.length !== 6) return;
     setIsLoading(true);
     // Simulate verification
+    axios.post('http://localhost:3000/voter-auth/verify-otp', ({otp}))
+    .then((res)=>{
+      if(!res.data.success){
+        alert("Wrong OTP");
+      }
+      else{
+        localStorage.setItem("loggedIn", true);
+        navigate("/home");
+
+      }
+    })
+    .catch(err=>{
+      alert("Something went wrong");
+    })
     setTimeout(() => {
       setIsLoading(false);
       navigate("/home");
@@ -46,7 +63,7 @@ const VoterAuth = () => {
   };
 
   return (
-    <div className="min-h-screen hero-gradient flex items-center justify-center p-4">
+    <div className="min-h-screen hero-gradient flex items-center justify-center p-4 pt-20">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

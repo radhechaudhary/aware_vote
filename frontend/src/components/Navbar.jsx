@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Globe, ChevronDown, User, Shield, UserCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const languages = [
   { code: "en", name: "English" },
@@ -12,26 +13,27 @@ const languages = [
   { code: "mr", name: "मराठी" },
 ];
 
-const Navbar = ({ variant = "default" }) => {
+const Navbar = () => {
+  const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState("en");
   const location = useLocation();
 
-  const isLanding = variant === "landing";
+  useEffect(()=>{
+    i18n.changeLanguage(currentLang);
+    localStorage.setItem("lang", currentLang);
+  },[currentLang])
 
-  const navLinks = isLanding
-    ? [
-        { name: "Home", path: "/" },
-        { name: "About", path: "#about" },
-        { name: "Features", path: "#features" },
-        { name: "FAQs", path: "#faqs" },
-      ]
-    : [
+  const isLoggedIn = localStorage.getItem("loggedIn") === "true";
+
+  const navLinks = 
+     [
         { name: "Home", path: "/home" },
         { name: "Leaders", path: "/leaders" },
         { name: "Communities", path: "/communities" },
       ];
+  const navigate = useNavigate();
 
   return (
     <motion.nav
@@ -39,7 +41,7 @@ const Navbar = ({ variant = "default" }) => {
       animate={{ y: 0 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={`fixed top-0 left-0 right-0 z-50 ${
-        isLanding ? "bg-background/80" : "bg-card/95"
+        true ? "bg-background/80" : "bg-card/95"
       } backdrop-blur-md border-b border-border`}
     >
       <div className="container mx-auto px-4">
@@ -73,7 +75,7 @@ const Navbar = ({ variant = "default" }) => {
                     : "text-muted-foreground"
                 }`}
               >
-                {link.name}
+                {t(link.name )}
               </Link>
             ))}
           </div>
@@ -123,7 +125,7 @@ const Navbar = ({ variant = "default" }) => {
             </div>
 
             {/* Auth Buttons */}
-            {isLanding && (
+            {!isLoggedIn && (
               <div className="hidden md:flex items-center gap-2">
                 <Link to="/voter-auth">
                   <motion.button
@@ -145,6 +147,22 @@ const Navbar = ({ variant = "default" }) => {
                     Leader
                   </motion.button>
                 </Link>
+              </div>
+            )}
+            {isLoggedIn && (
+              <div className="hidden md:flex items-center gap-2">
+                <div>
+                  <motion.button
+                    onClick={()=>{localStorage.setItem("loggedIn","false");navigate('/');}}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-2 px-4 py-1.5 text-white rounded-lg border border-border bg-rose-600 hover:bg-muted hover:text-rose-600 transition-colors font-medium"
+                  >
+                    <User className="w-4 h-4" />
+                    logout
+                  </motion.button>
+                </div>
+
               </div>
             )}
 

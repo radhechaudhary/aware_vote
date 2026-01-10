@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { 
   Shield, Users, Vote, CheckCircle, Play, 
   ChevronDown, Mail, ArrowRight, Sparkles,
   Building2, UserCheck, Scale, Eye
 } from "lucide-react";
-import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const fadeInUp = {
@@ -74,8 +74,6 @@ const stats = [
 const Landing = () => {
   return (
     <div className="min-h-screen bg-background">
-      <Navbar variant="landing" />
-
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-20 hero-gradient overflow-hidden">
         {/* Animated Background Elements */}
@@ -233,7 +231,7 @@ const Landing = () => {
             <div className="relative aspect-video rounded-2xl overflow-hidden bg-primary/10 glow-effect">
               <iframe
                 className="w-full h-full"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                src="https://www.youtube.com/embed/dnz3WXZGVvc?si=lXa8-vAUkoyR15iL"
                 title="One Nation One Election"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -267,8 +265,7 @@ const Landing = () => {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -10, boxShadow: "0 20px 40px -10px hsl(213 56% 24% / 0.15)" }}
+                transition={{ delay: index * 0.1}}
                 className="p-6 rounded-2xl bg-card border border-border transition-all"
               >
                 <div className="w-14 h-14 rounded-xl gradient-bg flex items-center justify-center mb-4">
@@ -326,9 +323,9 @@ const Landing = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.15 }}
-                className="relative group"
+                className="relative group flex"
               >
-                <div className="p-8 rounded-2xl bg-card border border-border h-full transition-all group-hover:border-primary/30">
+                <div className="p-8 rounded-2xl bg-card border border-border h-full transition-all group-hover:border-primary/30 flex flex-col justify-between">
                   <div className={`w-16 h-16 rounded-xl mb-6 flex items-center justify-center ${
                     role.color === 'secondary' ? 'bg-secondary/20 text-secondary' :
                     role.color === 'accent' ? 'bg-accent/20 text-accent' :
@@ -435,9 +432,10 @@ const Landing = () => {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {[
-              { name: "Dr. Priya Sharma", role: "Voter Education Head", email: "priya@voteraware.gov.in" },
-              { name: "Rajesh Kumar", role: "Technical Support", email: "rajesh@voteraware.gov.in" },
-              { name: "Anita Desai", role: "Community Manager", email: "anita@voteraware.gov.in" }
+              { name: "Mohit Chaudhary", role: "full-Stack", email: "radhechaudhary6398@gmail.com" },
+              { name: "Deepak Bisht", role: "Team Lead", email: "rajesh@voteraware.gov.in" },
+              { name: "Ankita Shah", role: "UI/UX", email: "anita@voteraware.gov.in" },
+              { name: "Yash Bisht", role: "Frontend", email: "anita@voteraware.gov.in" }
             ].map((member, index) => (
               <motion.div
                 key={member.name}

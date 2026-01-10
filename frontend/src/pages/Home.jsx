@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Users, MapPin, TrendingUp, Bell, ChevronRight } from "lucide-react";
-import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import SearchBar from "../components/SearchBar";
 import LeaderCard from "../components/LeaderCard";
@@ -71,7 +70,6 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       {/* Hero Section */}
       <section className="pt-28 pb-12 hero-gradient">

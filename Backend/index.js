@@ -47,12 +47,10 @@ import jwt from "jsonwebtoken";
 const app = express();
 const PORT = 3000;
 
-// In-memory DB (for now)
-const leaders = [];
 
 app.use(cors({
-  origin: "http://localhost:8080",
-  credentials: true
+  origin: "http://localhost:8080", // frontend URL
+  credentials: true                // allow cookies
 }));
 
 app.use(express.json());
@@ -103,6 +101,15 @@ app.post("/leader/login", (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
-});
+import voter_auth_router from './routes/voter-auth.route.js'
+app.use('/voter-auth',voter_auth_router);
+
+import leaders_router from './routes/leaders-search.route.js'
+app.use('/leaders',leaders_router);
+
+import ec_route from './routes/ec.route.js'
+app.use('/ec',ec_route);
+
+server.listen(PORT, ()=>{
+    console.log(`Server running on port ${PORT}`);
+})
