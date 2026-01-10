@@ -70,7 +70,6 @@ const LeaderProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       {/* Header */}
       <section className="pt-24 pb-8 hero-gradient">

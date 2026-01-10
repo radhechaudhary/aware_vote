@@ -9,7 +9,7 @@ const PORT = 3000;
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:5173", // frontend URL
+  origin: "http://localhost:8080", // frontend URL
   credentials: true                // allow cookies
 }));
 
@@ -33,6 +33,15 @@ const server = createServer(app)
 //       methods: ["GET", "POST"],       // Allow these HTTP methods
 //     },
 //   });
+
+import voter_auth_router from './routes/voter-auth.route.js'
+app.use('/voter-auth',voter_auth_router);
+
+import leaders_router from './routes/leaders-search.route.js'
+app.use('/leaders',leaders_router);
+
+import ec_route from './routes/ec.route.js'
+app.use('/ec',ec_route);
 
 server.listen(PORT, ()=>{
     console.log(`Server running on port ${PORT}`);
