@@ -229,10 +229,6 @@ const VoterAuth = () => {
             </p>
           </div>
         </div>
-
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          By continuing, you agree to our Terms of Service and Privacy Policy
-        </p>
       </motion.div>
     </div>
   );

@@ -20,15 +20,6 @@ const LeaderAuth = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   setIsLoading(true);
-  //   // Simulate API call
-  //   setTimeout(() => {
-  //     setIsLoading(false);
-  //     navigate("/leader-dashboard");
-  //   }, 1500);
-  // };
 
 
   const handleSubmit = async (e) => {
@@ -37,8 +28,8 @@ const LeaderAuth = () => {
 
   try {
     const url = isLogin
-      ? "http://localhost:3000/leader/login"
-      : "http://localhost:3000/leader/signup";
+      ? "http://localhost:3000/leader-auth/login"
+      : "http://localhost:3000/leader-auth/signup";
 
     const payload = isLogin
       ? {
@@ -71,7 +62,7 @@ const LeaderAuth = () => {
 
 
   return (
-    <div className="min-h-screen hero-gradient flex items-center justify-center p-4 pt-24">
+    <div className="min-h-screen hero-gradient flex items-center justify-center p-4 ">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -237,9 +228,6 @@ const LeaderAuth = () => {
           </div>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          By continuing, you agree to our Terms of Service and Privacy Policy
-        </p>
       </motion.div>
     </div>
   );

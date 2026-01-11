@@ -14,6 +14,9 @@ import LeaderDashboard from "./pages/LeaderDashboard";
 import ECDashboard from "./pages/ECDashboard";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
+import AdminLogin from './pages/admin-login';
+import AdminProtectedRoute from "./admin-protected";
+import LeaderProtectedRoute from './leader-protected'
 
 const queryClient = new QueryClient();
 
@@ -22,7 +25,7 @@ const Layout = ({ children }) => {
 
   return (
     <>
-      {location.pathname !== "/ec-dashboard" && <Navbar />}
+      {location.pathname !== "/ec-dashboard" && location.pathname !== "/ec-login" && location.pathname !== "/leader-auth"  && <Navbar />}
       {children}
     </>
   );
@@ -45,8 +48,13 @@ const App = () =>{
           <Route path="/communities" element={<Communities />} />
           <Route path="/voter-auth" element={<VoterAuth />} />
           <Route path="/leader-auth" element={<LeaderAuth />} />
-          <Route path="/leader-dashboard" element={<LeaderDashboard />} />
-          <Route path="/ec-dashboard" element={<ECDashboard />} />
+          <Route element={<LeaderProtectedRoute />}>
+            <Route path="/leader-dashboard" element={<LeaderDashboard />} />
+          </Route>
+          <Route path="/ec-login" element={<AdminLogin />} />
+          <Route element={<AdminProtectedRoute />}>
+            <Route path="/ec-dashboard" element={<ECDashboard />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
