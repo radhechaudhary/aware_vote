@@ -1,52 +1,87 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import axios from "axios";
+
 import { 
   Shield, Users, FileText, CheckCircle, Clock, XCircle,
-  Search, Filter, Eye, ChevronDown, Download, LogOut,
-  Menu, X, Home, Settings, BarChart3, AlertTriangle
+  Eye, Download, LogOut, Menu, X, BarChart3, AlertTriangle,
+  UsersRound, Plus, Image, Globe
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useEffect } from "react";
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: BarChart3 },
   { id: "leaders", label: "Leader Submissions", icon: Users },
   { id: "verified", label: "Verified Leaders", icon: CheckCircle },
+  { id: "community", label: "Community", icon: UsersRound },
 ];
 
-const leaderSubmissions = [
-  {
-    id: 1,
-    name: "Rajesh Sharma",
-    position: "Member of Parliament",
-    constituency: "Mumbai North",
-    submittedAt: "Jan 5, 2024",
-    documents: { education: "pending", govtId: "verified", partyTicket: "pending", criminal: "pending" },
-    status: "pending"
-  },
-  {
-    id: 2,
-    name: "Priya Patel",
-    position: "MLA",
-    constituency: "Ahmedabad East",
-    submittedAt: "Jan 3, 2024",
-    documents: { education: "verified", govtId: "verified", partyTicket: "verified", criminal: "verified" },
-    status: "verified"
-  },
-  {
-    id: 3,
-    name: "Dr. Arun Kumar",
-    position: "Municipal Councillor",
-    constituency: "Bangalore Central",
-    submittedAt: "Jan 2, 2024",
-    documents: { education: "rejected", govtId: "verified", partyTicket: "pending", criminal: "pending" },
-    status: "correction"
-  },
+const languages = [
+  "English", "Hindi", "Tamil", "Telugu", "Bengali",
+  "Marathi", "Gujarati", "Kannada", "Malayalam", "Punjabi",
 ];
 
 const ECDashboard = () => {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedLeader, setSelectedLeader] = useState(null);
+  const [leaders, setLeaderSubmissions] = useState([]);
+  const [showCorrectionDialog, setShowCorrectionDialog] = useState(false);
+  const [correctionMessage, setCorrectionMessage] = useState("");
+  const [corrections, setCorrections] = useState([]);
+
+  useEffect(()=>{
+  (async ()=>{
+    // Fetch leader submissions from API
+    const response = await axios.post("http://localhost:3000/ec/submissions", {}, {withCredentials:true});
+    const data = response.data.submissions;
+    console.log(data);
+    setLeaderSubmissions(data);
+  })()
+},[])
+
+  const [communities, setCommunities] = useState([
+    {
+      id: 1,
+      name: "Delhi Voters Forum",
+      description: "A community for voters in Delhi to discuss civic issues and electoral matters.",
+      image: "",
+      language: "Hindi",
+      createdAt: "Jan 10, 2024",
+      members: 1250,
+    },
+    {
+      id: 2,
+      name: "South India Electoral Watch",
+      description: "Monitoring elections and promoting voter awareness across South Indian states.",
+      image: "",
+      language: "English",
+      createdAt: "Jan 8, 2024",
+      members: 890,
+    },
+  ]);
+
+  
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newCommunity, setNewCommunity] = useState({
+    name: "",
+    description: "",
+    image: "",
+    language: "",
+  });
 
   const stats = [
     { label: "Total Submissions", value: 156, icon: Users, color: "primary" },
@@ -60,18 +95,69 @@ const ECDashboard = () => {
       case "verified":
         return <span className="px-2 py-1 rounded-full bg-secondary/20 text-secondary text-xs font-medium">Verified</span>;
       case "pending":
-        return <span className="px-2 py-1 rounded-full bg-accent/20 text-accent text-xs font-medium">Pending</span>;
+        return <span className="px-2 py-1 rounded-full bg-accent/20 text-accent-foreground text-xs font-medium">Pending</span>;
       case "rejected":
         return <span className="px-2 py-1 rounded-full bg-destructive/20 text-destructive text-xs font-medium">Rejected</span>;
       case "correction":
-        return <span className="px-2 py-1 rounded-full bg-accent/20 text-accent text-xs font-medium">Correction</span>;
+        return <span className="px-2 py-1 rounded-full bg-accent/20 text-accent-foreground text-xs font-medium">Correction</span>;
       default:
         return null;
     }
   };
 
+  const handleCreateCommunity = async() => {
+    if (!newCommunity.name || !newCommunity.description || !newCommunity.language) return;
+
+    const community = {
+      id: Date.now(),
+      name: newCommunity.name,
+      description: newCommunity.description,
+      image: newCommunity.image,
+      language: newCommunity.language,
+    };
+    const res =  await axios.post("http://localhost:3000/ec/create-community", community, {withCredentials:true});
+    setShowCreateForm(false);
+  };
+
+
+  const formik = useFormik({
+  initialValues: {
+    name: "",
+    description: "",
+    image: "",
+    language: "",
+  },
+  validationSchema: Yup.object({
+    name: Yup.string().required("Community name is required"),
+    description: Yup.string().required("Description is required"),
+    language: Yup.string().required("Language is required"),
+  }),
+  onSubmit: async(values) => {
+    const community = {
+      id: Date.now(),
+      name: values.name,
+      description: values.description,
+      image: values.image,
+      language: values.language,
+      createdAt: new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      members: 0,
+    };
+    const res =  await axios.post("http://localhost:3000/ec/create-community", community, {withCredentials:true});
+    console.log("Community Created:", community);
+
+    setCommunities((prev) => [community, ...prev]);
+    formik.resetForm();
+    setShowCreateForm(false);
+  },
+});
+
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex">
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-primary text-primary-foreground px-4 py-3 flex items-center justify-between">
         <button onClick={() => setSidebarOpen(true)} className="p-2 hover:bg-primary-foreground/10 rounded-lg">
@@ -135,13 +221,13 @@ const ECDashboard = () => {
       {/* Overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-foreground/50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main Content */}
-      <main className="lg:ml-64 pt-16 lg:pt-0">
+      <main className="flex-1 lg:ml-64 pt-16 lg:pt-0">
         <div className="p-6 lg:p-8">
           {/* Dashboard */}
           {activeSection === "dashboard" && (
@@ -194,11 +280,10 @@ const ECDashboard = () => {
                         <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Position</th>
                         <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Submitted</th>
                         <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {leaderSubmissions.map((leader) => (
+                      {leaders.map((leader) => (
                         <tr key={leader.id} className="hover:bg-muted/30 transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
@@ -209,12 +294,60 @@ const ECDashboard = () => {
                               </div>
                               <div>
                                 <p className="font-medium">{leader.name}</p>
-                                <p className="text-sm text-muted-foreground">{leader.constituency}</p>
+                                <p className="text-sm text-muted-foreground">{leader.curr_pos}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm">{leader.curr_pos}</td>
+                          <td className="px-6 py-4 text-sm text-muted-foreground">{leader.submittedAt}</td>
+                          <td className="px-6 py-4">{getStatusBadge(leader.status)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Leaders Section */}
+          {activeSection === "leaders" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <h1 className="font-heading text-2xl lg:text-3xl font-bold mb-6">Leader Submissions</h1>
+
+              <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Leader</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Position</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Submitted</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {leaders.map((leader) => (
+                        <tr key={leader.id} className="hover:bg-muted/30 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <span className="text-sm font-medium text-primary">
+                                  {leader.name.split(' ').map(n => n[0]).join('')}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="font-medium">{leader.name}</p>
+                                <p className="text-sm text-muted-foreground">{leader.curr_pos}</p>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm">{leader.position}</td>
-                          <td className="px-6 py-4 text-sm text-muted-foreground">{leader.submittedAt}</td>
+                          <td className="px-6 py-4 text-sm text-muted-foreground">{leader.submitted_at}</td>
                           <td className="px-6 py-4">{getStatusBadge(leader.status)}</td>
                           <td className="px-6 py-4">
                             <button
@@ -233,84 +366,61 @@ const ECDashboard = () => {
             </motion.div>
           )}
 
-          {/* Leaders Section */}
-          {activeSection === "leaders" && (
+          {/* Verified Leaders Section */}
+          {activeSection === "verified" && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <h1 className="font-heading text-2xl lg:text-3xl font-bold mb-6">Leader Submissions</h1>
-
-              {/* Search & Filter */}
-              <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <input
-                    type="text"
-                    placeholder="Search by name or constituency..."
-                    className="w-full pl-12 pr-4 py-3 rounded-xl bg-card border border-border focus:outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
-                <button className="flex items-center gap-2 px-4 py-3 rounded-xl bg-card border border-border hover:bg-muted transition-colors">
-                  <Filter className="w-5 h-5" />
-                  Filter
-                  <ChevronDown className="w-4 h-4" />
-                </button>
+              <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <h1 className="font-heading text-2xl lg:text-3xl font-bold">Verified Leaders</h1>
+                <p className="text-muted-foreground text-sm">
+                  Total Verified: {leaders.filter(l => l.status === "verified").length}
+                </p>
               </div>
 
-              {/* Table */}
               <div className="bg-card rounded-2xl border border-border overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-muted/50">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Leader</th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Documents</th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
-                        <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase">Actions</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Leader</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Position</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Submitted</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {leaderSubmissions.map((leader) => (
-                        <tr key={leader.id} className="hover:bg-muted/30 transition-colors">
-                          <td className="px-6 py-4">
-                            <div>
-                              <p className="font-medium">{leader.name}</p>
-                              <p className="text-sm text-muted-foreground">{leader.position} • {leader.constituency}</p>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex gap-2">
-                              {Object.entries(leader.documents).map(([key, status]) => (
-                                <span
-                                  key={key}
-                                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                                    status === 'verified' ? 'bg-secondary/20 text-secondary' :
-                                    status === 'pending' ? 'bg-accent/20 text-accent' :
-                                    'bg-destructive/20 text-destructive'
-                                  }`}
-                                  title={`${key}: ${status}`}
-                                >
-                                  {status === 'verified' ? '✓' : status === 'pending' ? '?' : '✗'}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">{getStatusBadge(leader.status)}</td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <button className="px-3 py-1.5 rounded-lg bg-secondary/20 text-secondary text-sm font-medium hover:bg-secondary/30">
-                                Approve
+                      {leaders
+                        .filter((leader) => leader.status === "verified")
+                        .map((leader) => (
+                          <tr key={leader.id} className="hover:bg-muted/30 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <span className="text-sm font-medium text-primary">
+                                    {leader.name.split(" ").map((n) => n[0]).join("")}
+                                  </span>
+                                </div>
+                                <div>
+                                  <p className="font-medium text-sm">{leader.name}</p>
+                                  <p className="text-xs text-muted-foreground">{leader.constituency}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm">{leader.position}</td>
+                            <td className="px-6 py-4 text-sm text-muted-foreground">{leader.submittedAt}</td>
+                            <td className="px-6 py-4">{getStatusBadge(leader.status)}</td>
+                            <td className="px-6 py-4">
+                              <button
+                                onClick={() => setSelectedLeader(leader)}
+                                className="flex items-center gap-1 text-sm text-primary font-medium hover:underline"
+                              >
+                                <Eye className="w-4 h-4" /> View
                               </button>
-                              <button className="px-3 py-1.5 rounded-lg bg-destructive/20 text-destructive text-sm font-medium hover:bg-destructive/30">
-                                Reject
-                              </button>
-                              <button className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm font-medium hover:bg-muted/80">
-                                Request
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
+                            </td>
+                          </tr>
                       ))}
                     </tbody>
                   </table>
@@ -319,106 +429,319 @@ const ECDashboard = () => {
             </motion.div>
           )}
 
-          {/* Verified Leaders */}
-          {activeSection === "verified" && (
+          {/* Community Section */}
+          {activeSection === "community" && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <h1 className="font-heading text-2xl lg:text-3xl font-bold mb-6">Verified Leaders</h1>
-              <p className="text-muted-foreground mb-8">
-                Leaders who have completed verification and are published publicly.
-              </p>
-
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {leaderSubmissions.filter(l => l.status === 'verified').map((leader) => (
-                  <div key={leader.id} className="p-6 rounded-2xl bg-card border border-border">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-14 h-14 rounded-full bg-secondary/20 flex items-center justify-center">
-                        <span className="text-lg font-heading font-bold text-secondary">
-                          {leader.name.split(' ').map(n => n[0]).join('')}
-                        </span>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold flex items-center gap-2">
-                          {leader.name}
-                          <CheckCircle className="w-4 h-4 text-secondary" />
-                        </h3>
-                        <p className="text-sm text-muted-foreground">{leader.position}</p>
-                      </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4">{leader.constituency}</p>
-                    <div className="flex items-center gap-2">
-                      <button className="flex-1 py-2 rounded-lg bg-muted text-sm font-medium hover:bg-muted/80 transition-colors">
-                        View Profile
-                      </button>
-                      <button className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
-                        <Download className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h1 className="font-heading text-2xl lg:text-3xl font-bold">Community</h1>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    Create and manage voter communities
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setShowCreateForm(true)}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Community
+                </Button>
               </div>
+
+              {/* Create Community Form */}
+              {showCreateForm && (
+  <motion.form
+    onSubmit={formik.handleSubmit}
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="bg-card rounded-2xl border border-border p-6 mb-6"
+  >
+    <div className="flex items-center justify-between mb-6">
+      <h2 className="font-heading font-semibold text-lg">
+        Create New Community
+      </h2>
+      <button
+        type="button"
+        onClick={() => setShowCreateForm(false)}
+        className="p-2 hover:bg-muted rounded-lg"
+      >
+        <X className="w-5 h-5" />
+      </button>
+    </div>
+
+    <div className="grid gap-6 md:grid-cols-2">
+      {/* Name */}
+      <div className="space-y-2">
+        <Label>Community Name *</Label>
+        <Input
+          name="name"
+          value={formik.values.name}
+          onChange={formik.handleChange}
+        />
+        {formik.touched.name && formik.errors.name && (
+          <p className="text-xs text-destructive">
+            {formik.errors.name}
+          </p>
+        )}
+      </div>
+
+      {/* Language */}
+      <div className="space-y-2">
+        <Label>Language *</Label>
+        <Select
+          value={formik.values.language}
+          onValueChange={(value) =>
+            formik.setFieldValue("language", value)
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select language" />
+          </SelectTrigger>
+          <SelectContent>
+            {languages.map((lang) => (
+              <SelectItem key={lang} value={lang}>
+                {lang}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {formik.touched.language && formik.errors.language && (
+          <p className="text-xs text-destructive">
+            {formik.errors.language}
+          </p>
+        )}
+      </div>
+
+      {/* Description */}
+      <div className="space-y-2 md:col-span-2">
+        <Label>Description *</Label>
+        <Textarea
+          name="description"
+          rows={3}
+          value={formik.values.description}
+          onChange={formik.handleChange}
+        />
+        {formik.touched.description && formik.errors.description && (
+          <p className="text-xs text-destructive">
+            {formik.errors.description}
+          </p>
+        )}
+      </div>
+
+      {/* Image */}
+      <div className="space-y-2 md:col-span-2">
+        <Label>Image URL (Optional)</Label>
+        <Input
+          name="image"
+          value={formik.values.image}
+          onChange={formik.handleChange}
+          placeholder="https://example.com/image.jpg"
+        />
+      </div>
+    </div>
+
+    <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-border">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setShowCreateForm(false)}
+      >
+        Cancel
+      </Button>
+      <Button
+        type="submit"
+        className="bg-primary text-primary-foreground"
+      >
+        Create Community
+      </Button>
+    </div>
+  </motion.form>
+)}
+
+
+             
             </motion.div>
           )}
         </div>
       </main>
 
       {/* Review Modal */}
-      {selectedLeader && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-2xl bg-card rounded-2xl shadow-xl overflow-hidden"
-          >
-            <div className="p-6 border-b border-border flex items-center justify-between">
-              <h2 className="font-heading font-bold text-xl">Review Submission</h2>
-              <button
-                onClick={() => setSelectedLeader(null)}
-                className="p-2 hover:bg-muted rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-xl font-heading font-bold text-primary">
-                    {selectedLeader.name.split(' ').map(n => n[0]).join('')}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-heading font-bold text-lg">{selectedLeader.name}</h3>
-                  <p className="text-muted-foreground">{selectedLeader.position} • {selectedLeader.constituency}</p>
-                </div>
-              </div>
+     {/* Review Modal */}
+{selectedLeader && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/50">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="w-full max-w-3xl bg-card rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
+    >
+      {/* Header */}
+      <div className="p-6 border-b border-border flex items-center justify-between">
+        <h2 className="font-heading font-bold text-xl">Submitted Documents</h2>
+        <button onClick={() => setSelectedLeader(null)} className="p-2 hover:bg-muted rounded-lg">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
 
-              <h4 className="font-semibold mb-4">Document Status</h4>
-              <div className="space-y-3 mb-6">
-                {Object.entries(selectedLeader.documents).map(([key, status]) => (
-                  <div key={key} className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
-                    <span className="capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
-                    {getStatusBadge(status)}
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-3">
-                <button className="flex-1 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium">
-                  Approve All
-                </button>
-                <button className="flex-1 py-3 rounded-xl bg-destructive text-destructive-foreground font-medium">
-                  Reject
-                </button>
-                <button className="flex-1 py-3 rounded-xl bg-muted font-medium">
-                  Request Correction
-                </button>
-              </div>
-            </div>
-          </motion.div>
+      {/* Leader Info */}
+      <div className="flex items-center gap-4 px-6 py-4 border-b border-border">
+        <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+          <span className="text-lg font-heading font-bold text-primary">
+            {selectedLeader.name.split(" ").map(n => n[0]).join("")}
+          </span>
         </div>
-      )}
+        <div>
+          <h3 className="font-heading font-bold text-lg">{selectedLeader.name}</h3>
+          <p className="text-muted-foreground">
+            {selectedLeader.position} • {selectedLeader.constituency}
+          </p>
+        </div>
+      </div>
+
+      {/* Documents Carousel */}
+      <div className="relative px-6 py-6 overflow-hidden flex-1">
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none">
+          {Object.entries(selectedLeader.documents).map(([docKey, docStatus]) => (
+            <div
+              key={docKey}
+              className="flex-shrink-0 w-64 snap-center border border-border rounded-xl overflow-hidden bg-card"
+            >
+              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                <span className="text-sm font-medium capitalize">
+                  {docKey === "govtId" ? "Government ID" : docKey === "partyTicket" ? "Party Ticket" : docKey}
+                </span>
+                {getStatusBadge(docStatus)}
+              </div>
+
+              <div className="h-40 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                <FileText className="w-10 h-10" />
+                <p className="text-sm">Document Uploaded</p>
+                <button className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:underline">
+                  <Download className="w-4 h-4" />
+                  View / Download
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="p-6 border-t border-border flex flex-col sm:flex-row gap-3 justify-end">
+        <Button
+          onClick={() => {
+            setLeaderSubmissions(prev =>
+              prev.map(l => l.id === selectedLeader.id ? { ...l, status: "verified" } : l)
+            );
+            setSelectedLeader(null);
+          }}
+          className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+        >
+          Approve
+        </Button>
+
+        {/* Request Correction */}
+        <Button
+          onClick={() => setShowCorrectionDialog(true)}
+          className="bg-accent hover:bg-accent/90 text-accent-foreground"
+        >
+          Request Correction
+        </Button>
+
+        <Button
+          onClick={() => {
+            setLeaderSubmissions(prev =>
+              prev.map(l => l.id === selectedLeader.id ? { ...l, status: "rejected" } : l)
+            );
+            setSelectedLeader(null);
+          }}
+          className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+        >
+          Reject
+        </Button>
+      </div>
+
+      {/* Correction Modal */}
+     {showCorrectionDialog && selectedLeader && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/50">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="w-full max-w-md bg-card rounded-2xl shadow-xl overflow-hidden flex flex-col"
+    >
+      <div className="p-6 border-b border-border flex items-center justify-between">
+        <h2 className="font-heading font-bold text-lg">
+          Request Correction
+        </h2>
+        <button
+          onClick={() => setShowCorrectionDialog(false)}
+          className="p-2 hover:bg-muted rounded-lg"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="p-6 flex flex-col gap-4">
+        <p>
+          Send a correction request for <strong>{selectedLeader.name}</strong>
+        </p>
+        <Textarea
+          rows={4}
+          value={correctionMessage}
+          onChange={(e) => setCorrectionMessage(e.target.value)}
+          placeholder="Write the correction message here..."
+        />
+
+        <div className="flex justify-end gap-3 mt-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowCorrectionDialog(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="bg-accent text-accent-foreground"
+            onClick={() => {
+              // Update leader status
+              setLeaderSubmissions(prev =>
+                prev.map(l =>
+                  l.id === selectedLeader.id
+                    ? { ...l, status: "correction" }
+                    : l
+                )
+              );
+
+              // Add correction to state
+              const correctionObj = {
+                leaderId: selectedLeader.id,
+                leaderName: selectedLeader.name,
+                message: correctionMessage,
+                date: new Date().toISOString(),
+              };
+              setCorrections(prev => [...prev, correctionObj]);
+
+              // Console log the object
+              console.log("Correction submitted:", correctionObj);
+
+              // Close modal
+              setShowCorrectionDialog(false);
+              setSelectedLeader(null);
+              setCorrectionMessage("");
+            }}
+          >
+            Submit
+          </Button>
+        </div>
+      </div>
+    </motion.div>
+  </div>
+)}
+    </motion.div>
+  </div>
+)}
+
     </div>
   );
 };

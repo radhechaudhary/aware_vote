@@ -42,15 +42,17 @@ const VoterAuth = () => {
     if (enteredOtp.length !== 6) return;
     setIsLoading(true);
     // Simulate verification
-    axios.post('http://localhost:3000/voter-auth/verify-otp', ({otp}))
-    .then((res)=>{
-      if(!res.data.success){
+    axios.post(
+      "http://localhost:3000/voter-auth/verify-otp",
+      { otp },
+      { withCredentials: true }
+    )
+    .then((res) => {
+      if (!res.data.success) {
         alert("Wrong OTP");
-      }
-      else{
-        localStorage.setItem("loggedIn", true);
+      } else {
+        localStorage.setItem("loggedIn", "true");
         navigate("/home");
-
       }
     })
     .catch(err=>{

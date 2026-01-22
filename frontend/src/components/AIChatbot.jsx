@@ -1,13 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Bot, User, Sparkles } from "lucide-react";
+import axios from "axios";
 
-const sampleResponses = [
-  "One Nation One Election proposes conducting simultaneous elections for the Lok Sabha and State Assemblies to reduce election-related expenditure and policy paralysis.",
-  "To verify any election-related claim, please check with the official Election Commission of India website or your local electoral office.",
-  "Voter ID cards can be applied for online through the NVSP portal or at your nearest electoral registration office.",
-  "The Election Commission of India is the autonomous constitutional authority responsible for administering election processes in India.",
-];
 
 const AIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +16,7 @@ const AIChatbot = () => {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
-  const handleSend = () => {
+  const handleSend = async() => {
     if (!inputValue.trim()) return;
 
     const userMessage = {
@@ -31,19 +26,17 @@ const AIChatbot = () => {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const res = await axios.post("http://localhost:3000/chatbot/chat", {message:inputValue}, {withCredentials:true});
+    const botResponse = {
+        id: Date.now() + 1,
+        type: "bot",
+        text: res.data.response,
+      };
+    setMessages((prev) => [...prev, botResponse]);
     setInputValue("");
     setIsTyping(true);
 
     // Simulate AI response
-    setTimeout(() => {
-      const botResponse = {
-        id: Date.now() + 1,
-        type: "bot",
-        text: sampleResponses[Math.floor(Math.random() * sampleResponses.length)],
-      };
-      setMessages((prev) => [...prev, botResponse]);
-      setIsTyping(false);
-    }, 1500);
   };
 
   return (

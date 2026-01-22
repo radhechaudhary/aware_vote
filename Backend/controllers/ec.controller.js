@@ -17,10 +17,10 @@ const login = async (req, res)=>{
                 sameSite: 'none', // 👈 allows cross-site cookies
                 path: '/',
             });
-            res.status(200).json({fName:data.rows[0].fname, lName:data.rows[0].lname})
+            res.status(200).json({success:true})
         }
         else{
-            res.status(300).json({error:'wrong passowrd'})
+            res.status(300).json({success:false})
         }
     }
     catch(error){
@@ -29,7 +29,8 @@ const login = async (req, res)=>{
     }
 }
 
-const validate =  (req, res, next) => { 
+const validate =  (req, res) => { 
+
     const token = req.cookies.ecAuthToken;
     const secretKey = 'jefhd85o3ruijf9';
     if (!token) return res.status(403).json({  
@@ -37,6 +38,7 @@ const validate =  (req, res, next) => {
     }); 
     try { 
         const decoded = jsonwebtoken.verify(token, secretKey); 
+        console.log(decoded.role)
         if(decoded.role !== 'admin'){
             return res.status(401).json({  
                 valid:false
@@ -49,4 +51,34 @@ const validate =  (req, res, next) => {
     } 
     res.status(200).json({valid:true}); 
 };
-export {login, validate};
+
+const submissions =  async(req, res) => { 
+
+    const token = req.cookies.ecAuthToken;
+    const secretKey = 'jefhd85o3ruijf9';
+    if (!token) return res.status(403).json({  
+        msg: "No token present" 
+    }); 
+    try { 
+        const decoded = jsonwebtoken.verify(token, secretKey); 
+        if(decoded.role !== 'admin'){
+            res.status(404)
+        }
+        else{
+            const data = await db.query('SELECT * FROM pending_verification');
+            console.log(data.rows)
+            res.json({submissions:data.rows});
+        }
+    } catch (err) { 
+        return res.status(401).json({  
+            valid:null
+        }); 
+    } 
+};
+const createCommunity = async (req, res) => {
+    const {name, language, description, image} = req.body;
+    console.log(name)
+    await db.query('INSERT INTO communities (name, language, description, image) VALUES ($1, $2, $3, $4)', [name, language, description, image]);
+    res.status(201).json({message: 'Community created successfully'});
+}
+export {login, validate, submissions, createCommunity};

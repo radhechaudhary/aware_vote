@@ -2,11 +2,12 @@ import { Router } from "express";
 
 const router = Router();
 
-import {login, signup, validate} from '../controllers/leader-auth.controller.js'
+import {login, verification, validate} from '../controllers/leader-auth.controller.js'
 
 router.post('/login', login)
 
-router.post('/signup', signup)
+import { uploadVerificationFiles } from "../middelwares/multer.middleware.js";
+router.post('/verification', uploadVerificationFiles.array("documents", 6), verification)
 
 router.post('/validate', validate)
 

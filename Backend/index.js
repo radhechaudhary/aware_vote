@@ -52,6 +52,13 @@ app.use('/leader-auth', leader_auth_router);
 import ec_route from './routes/ec.route.js'
 app.use('/ec',ec_route);
 
+import community_route from './routes/community.route.js'
+app.use('/community',community_route);
+
+import chatbot_route from './routes/chatbot.routes.js'
+app.use('/chatbot',chatbot_route);
+
+
 server.listen(PORT, ()=>{
     console.log(`Server running on port ${PORT}`);
 })

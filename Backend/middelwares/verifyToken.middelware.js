@@ -4,7 +4,7 @@ import jsonwebtoken from "jsonwebtoken";
 // dotenv.config();
 
 const verifyTokenMiddleware = (req, res, next) => { 
-    const token = req.cookies.authToken;
+    const token = req.cookies.Token;
     const secretKey = 'jefhd85o3ruijf9';
     if (!token) return res.status(403).json({  
         msg: "No token present" 

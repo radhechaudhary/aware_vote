@@ -5,53 +5,10 @@ import Footer from "../components/Footer";
 import SearchBar from "../components/SearchBar";
 import LeaderCard from "../components/LeaderCard";
 import AIChatbot from "../components/AIChatbot";
+import axios from 'axios'
+import { useEffect } from "react";
 
-const sampleLeaders = [
-  {
-    id: 1,
-    name: "Rajesh Sharma",
-    position: "Member of Parliament",
-    party: "Democratic Party",
-    constituency: "Mumbai North",
-    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop",
-    verified: true,
-    upvotes: 1250,
-    downvotes: 180
-  },
-  {
-    id: 2,
-    name: "Priya Patel",
-    position: "MLA",
-    party: "National Party",
-    constituency: "Ahmedabad East",
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop",
-    verified: true,
-    upvotes: 980,
-    downvotes: 120
-  },
-  {
-    id: 3,
-    name: "Dr. Arun Kumar",
-    position: "Municipal Councillor",
-    party: "People's Party",
-    constituency: "Bangalore Central",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop",
-    verified: true,
-    upvotes: 756,
-    downvotes: 89
-  },
-  {
-    id: 4,
-    name: "Sunita Reddy",
-    position: "Member of Parliament",
-    party: "Progressive Alliance",
-    constituency: "Hyderabad",
-    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop",
-    verified: false,
-    upvotes: 543,
-    downvotes: 201
-  }
-];
+
 
 const announcements = [
   { id: 1, title: "Voter Registration Deadline Extended", date: "Jan 15, 2024" },
@@ -60,11 +17,25 @@ const announcements = [
 ];
 
 const Home = () => {
-  const [searchResults, setSearchResults] = useState(null);
+  const [sampleLeaders, setSampleLeaders] = useState([]);
+  const [searchResults, setSearchResults] = useState("");
 
-  const handleSearch = (data) => {
-    console.log("Search:", data);
-    // In real app, this would filter/fetch results
+
+  useEffect(()=>{
+    (async ()=>{
+      try{
+      const res = await axios.post("http://localhost:3000/leaders/get-sample-leaders",{} , {withCredentials:true});
+      setSampleLeaders(res.data.sampleLeaders);
+      }
+      catch(err){
+
+      }
+    })()
+  },[])
+
+  const handleSearch = async(data) => {
+    const res = await axios.post("http://localhost:3000/leaders/name-search", {value:data.query}, {withCredentials:true});
+    setSampleLeaders(res.data.filtered_leaders);
     setSearchResults(data.query);
   };
 

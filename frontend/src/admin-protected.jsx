@@ -7,11 +7,13 @@ const AdminProtectedRoute = () => {
 
   useEffect(() => {
     const validate = async () => {
+      console.log("Validating admin auth...");
       try {
-        const res = await axios.get(
+        const res = await axios.post(
           "http://localhost:3000/ec/validate",
+          {}, // 👈 empty body
           {
-            withCredentials: true // REQUIRED for cookies
+            withCredentials: true // 👈 config goes here
           }
         );
         setIsAuth(res.data.valid);

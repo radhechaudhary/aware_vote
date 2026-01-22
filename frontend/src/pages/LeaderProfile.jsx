@@ -6,16 +6,17 @@ import {
   Calendar, ThumbsUp, ThumbsDown, MessageSquare, AlertTriangle,
   FileText, Award, Users, TrendingUp, ExternalLink
 } from "lucide-react";
-import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AIChatbot from "../components/AIChatbot";
+import axios from 'axios'
+import { useEffect } from "react";
 
-const leaderData = {
+const data = {
   id: 1,
   name: "Rajesh Sharma",
   position: "Member of Parliament",
   party: "Democratic Party",
-  constituency: "Mumbai North",
+  constituency_code: "Mumbai North",
   image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop",
   verified: true,
   upvotes: 1250,
@@ -30,16 +31,13 @@ const leaderData = {
     { role: "State Minister", duration: "2014 - 2019", description: "Minister of Urban Development, Maharashtra" },
     { role: "MLA", duration: "2009 - 2014", description: "Andheri East constituency" }
   ],
-  workDone: [
+  promises_resolved: [
     "Led urban infrastructure development worth ₹5000 crores",
     "Initiated 'Clean Mumbai' campaign benefiting 2 million citizens",
     "Established 50+ skill development centers",
     "Improved road connectivity in rural areas"
   ],
-  criminalRecord: {
-    status: "No Criminal Cases",
-    details: "Clean record as per Election Commission verification"
-  },
+  criminal_cases: [],
   stats: {
     projectsCompleted: 47,
     budgetUtilized: "₹892 Cr",
@@ -47,22 +45,40 @@ const leaderData = {
   }
 };
 
-const discussions = [
-  { id: 1, user: "Amit K.", comment: "Good work on the infrastructure projects!", time: "2 hours ago", likes: 24 },
-  { id: 2, user: "Priya M.", comment: "When will the metro extension be completed?", time: "5 hours ago", likes: 18 },
-  { id: 3, user: "Rahul S.", comment: "Need more focus on healthcare facilities.", time: "1 day ago", likes: 45 }
-];
 
 const LeaderProfile = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("overview");
   const [userVote, setUserVote] = useState(null);
+  const [leader, setLeaderData] = useState({...data})
+  const [comments, setComments] = useState(leader.comments || []) 
+  const [newComment, setNewComment] = useState("")
 
-  const leader = leaderData; // In real app, fetch based on id
+  useEffect(()=>{
+    (async ()=>{
+      const res = await axios.post("http://localhost:3000/leaders/get-leader-by-id",{id:id} , {withCredentials:true});
+      setLeaderData(res.data.leader);
+      setComments(res.data.comments || []);
+    })()
+  },[])
+
+  const handleCommentPost = async(e) => {
+    e.preventDefault(); // Prevent default form submission behavior
+
+    try {
+      const res = await axios.post("http://localhost:3000/leaders/post-comment",{leaderId:id, comment:newComment} , {withCredentials:true});
+
+      setComments(res.data.comments);
+      setNewComment(""); 
+    }
+    catch(err){
+      alert("Could not post comment");
+    } 
+  }         
+
 
   const tabs = [
     { id: "overview", label: "Overview" },
-    { id: "education", label: "Education" },
     { id: "work", label: "Work Done" },
     { id: "criminal", label: "Criminal Record" },
     { id: "discussion", label: "Discussion" }
@@ -94,8 +110,8 @@ const LeaderProfile = () => {
                 alt={leader.name}
                 className="w-40 h-40 md:w-48 md:h-48 rounded-2xl object-cover shadow-lg"
               />
-              {leader.verified && (
-                <div className="absolute -bottom-3 -right-3 bg-secondary text-secondary-foreground px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-lg">
+              {true && (
+                <div className="absolute -bottom-3 -right-3 bg-orange-600 text-secondary-foreground px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 shadow-lg">
                   <BadgeCheck className="w-4 h-4" />
                   Verified
                 </div>
@@ -112,11 +128,11 @@ const LeaderProfile = () => {
                   <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-4">
                     <span className="flex items-center gap-1.5">
                       <Briefcase className="w-4 h-4" />
-                      {leader.position}
+                      {leader.current_position}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <MapPin className="w-4 h-4" />
-                      {leader.constituency}
+                      {leader.constituency_code}
                     </span>
                   </div>
                   <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
@@ -156,29 +172,7 @@ const LeaderProfile = () => {
               </div>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-3 gap-4 mt-6">
-                <div className="p-4 rounded-xl bg-card border border-border">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Award className="w-4 h-4" />
-                    <span className="text-xs">Projects</span>
-                  </div>
-                  <p className="font-heading font-bold text-xl">{leader.stats.projectsCompleted}</p>
-                </div>
-                <div className="p-4 rounded-xl bg-card border border-border">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="text-xs">Budget</span>
-                  </div>
-                  <p className="font-heading font-bold text-xl">{leader.stats.budgetUtilized}</p>
-                </div>
-                <div className="p-4 rounded-xl bg-card border border-border">
-                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                    <Users className="w-4 h-4" />
-                    <span className="text-xs">Ranking</span>
-                  </div>
-                  <p className="font-heading font-bold text-xl">{leader.stats.constituencyRanking}</p>
-                </div>
-              </div>
+              
             </div>
           </motion.div>
         </div>
@@ -223,33 +217,12 @@ const LeaderProfile = () => {
                       Education
                     </h3>
                     <div className="space-y-4">
-                      {leader.education.slice(0, 2).map((edu, index) => (
-                        <div key={index} className="flex items-start gap-3">
+  
                           <div className="w-2 h-2 rounded-full bg-primary mt-2" />
                           <div>
-                            <p className="font-medium">{edu.degree}</p>
-                            <p className="text-sm text-muted-foreground">{edu.institution}, {edu.year}</p>
+                            <p className="font-medium">{leader.highest_education}</p>
+                            
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="p-6 rounded-2xl bg-card border border-border">
-                    <h3 className="font-heading font-semibold text-lg mb-4 flex items-center gap-2">
-                      <Briefcase className="w-5 h-5 text-primary" />
-                      Political Experience
-                    </h3>
-                    <div className="space-y-4">
-                      {leader.experience.map((exp, index) => (
-                        <div key={index} className="flex items-start gap-3">
-                          <div className="w-2 h-2 rounded-full bg-secondary mt-2" />
-                          <div>
-                            <p className="font-medium">{exp.role}</p>
-                            <p className="text-sm text-muted-foreground">{exp.duration}</p>
-                          </div>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
@@ -261,7 +234,7 @@ const LeaderProfile = () => {
                       Key Achievements
                     </h3>
                     <ul className="space-y-3">
-                      {leader.workDone.map((work, index) => (
+                      {leader.promises_resolved.map((work, index) => (
                         <li key={index} className="flex items-start gap-3 text-sm">
                           <span className="text-secondary mt-0.5">✓</span>
                           {work}
@@ -271,47 +244,23 @@ const LeaderProfile = () => {
                   </div>
 
                   <div className={`p-6 rounded-2xl border ${
-                    leader.criminalRecord.status === "No Criminal Cases" 
+                    leader.criminal_cases.length !== 0
                       ? "bg-secondary/10 border-secondary/30" 
                       : "bg-destructive/10 border-destructive/30"
                   }`}>
                     <h3 className="font-heading font-semibold text-lg mb-2 flex items-center gap-2">
                       <AlertTriangle className={`w-5 h-5 ${
-                        leader.criminalRecord.status === "No Criminal Cases" ? "text-secondary" : "text-destructive"
+                        leader.criminal_cases.length === 0  ? "text-secondary" : "text-destructive"
                       }`} />
                       Criminal Record Status
                     </h3>
                     <p className={`font-medium ${
-                      leader.criminalRecord.status === "No Criminal Cases" ? "text-secondary" : "text-destructive"
+                      leader.criminal_cases.length === 0 ? "text-secondary" : "text-destructive"
                     }`}>
-                      {leader.criminalRecord.status}
+                      {leader.criminal_cases.length === 0 ? "No Criminal Cases" : "Criminal Cases Found"}
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">{leader.criminalRecord.details}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{leader.criminal_cases.length === 0 ? "No criminal cases found." : "Criminal cases found."}</p>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "education" && (
-              <div className="max-w-2xl">
-                <h2 className="font-heading text-2xl font-bold mb-6">Education History</h2>
-                <div className="space-y-6">
-                  {leader.education.map((edu, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="relative pl-8 pb-6 border-l-2 border-primary/30 last:border-l-0"
-                    >
-                      <div className="absolute -left-2.5 top-0 w-5 h-5 rounded-full bg-primary" />
-                      <div className="p-5 rounded-xl bg-card border border-border">
-                        <p className="text-sm text-muted-foreground mb-1">{edu.year}</p>
-                        <h3 className="font-semibold text-lg">{edu.degree}</h3>
-                        <p className="text-muted-foreground">{edu.institution}</p>
-                      </div>
-                    </motion.div>
-                  ))}
                 </div>
               </div>
             )}
@@ -320,7 +269,7 @@ const LeaderProfile = () => {
               <div>
                 <h2 className="font-heading text-2xl font-bold mb-6">Work & Contributions</h2>
                 <div className="grid md:grid-cols-2 gap-6">
-                  {leader.workDone.map((work, index) => (
+                  {leader.promises_resolved.map((work, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, y: 20 }}
@@ -342,23 +291,23 @@ const LeaderProfile = () => {
               <div className="max-w-2xl">
                 <h2 className="font-heading text-2xl font-bold mb-6">Criminal Record Declaration</h2>
                 <div className={`p-8 rounded-2xl border-2 ${
-                  leader.criminalRecord.status === "No Criminal Cases"
+                  leader.criminal_cases.length === 0
                     ? "bg-secondary/10 border-secondary/30"
                     : "bg-destructive/10 border-destructive/30"
                 }`}>
                   <div className="flex items-center gap-4 mb-4">
                     <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                      leader.criminalRecord.status === "No Criminal Cases" ? "bg-secondary" : "bg-destructive"
+                      leader.criminal_cases.length === 0 ? "bg-secondary" : "bg-destructive"
                     }`}>
-                      {leader.criminalRecord.status === "No Criminal Cases" ? (
+                      {leader.criminal_cases.length === 0 ? (
                         <BadgeCheck className="w-8 h-8 text-secondary-foreground" />
                       ) : (
                         <AlertTriangle className="w-8 h-8 text-destructive-foreground" />
                       )}
                     </div>
                     <div>
-                      <h3 className="font-heading font-bold text-xl">{leader.criminalRecord.status}</h3>
-                      <p className="text-muted-foreground">{leader.criminalRecord.details}</p>
+                      <h3 className="font-heading font-bold text-xl">{leader.criminal_cases.length === 0 ? "No Criminal Cases" : "Criminal Cases Found"}</h3>
+                      <p className="text-muted-foreground">{leader.criminal_cases.length === 0 ? "Clean record as per Election Commission verification" : "Criminal cases found."}</p>
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -373,14 +322,18 @@ const LeaderProfile = () => {
                 <h2 className="font-heading text-2xl font-bold mb-6">Citizen Feedback & Discussion</h2>
                 
                 {/* Add Comment */}
-                <div className="p-6 rounded-2xl bg-card border border-border mb-8">
+                <form onSubmit={handleCommentPost} className="p-6 rounded-2xl bg-card border border-border mb-8">
                   <textarea
+                    value = {newComment}
+                    name = 'comment'
                     placeholder="Share your feedback or ask a question..."
                     className="w-full p-4 rounded-xl bg-muted border-none resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
                     rows={3}
+                    onChange={(e)=>setNewComment(e.target.value)}
                   />
                   <div className="flex justify-end mt-4">
                     <motion.button
+                    type = "submit"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="px-6 py-2.5 rounded-xl gradient-bg text-primary-foreground font-medium"
@@ -388,11 +341,11 @@ const LeaderProfile = () => {
                       Post Comment
                     </motion.button>
                   </div>
-                </div>
+                </form>
 
                 {/* Comments */}
                 <div className="space-y-4">
-                  {discussions.map((discussion) => (
+                  {comments.map((discussion) => (
                     <motion.div
                       key={discussion.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -403,18 +356,9 @@ const LeaderProfile = () => {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                             <span className="font-medium text-primary">
-                              {discussion.user.split(' ').map(n => n[0]).join('')}
                             </span>
                           </div>
-                          <div>
-                            <p className="font-medium">{discussion.user}</p>
-                            <p className="text-xs text-muted-foreground">{discussion.time}</p>
-                          </div>
                         </div>
-                        <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-                          <ThumbsUp className="w-4 h-4" />
-                          {discussion.likes}
-                        </button>
                       </div>
                       <p className="text-foreground">{discussion.comment}</p>
                     </motion.div>

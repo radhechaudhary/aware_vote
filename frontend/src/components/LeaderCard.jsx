@@ -33,7 +33,7 @@ const LeaderCard = ({ leader, index }) => {
             </h3>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
               <Briefcase className="w-3.5 h-3.5" />
-              {leader.position}
+              {leader.current_position}
             </p>
           </div>
           <span className="text-xs font-medium px-2 py-1 rounded-full bg-primary/10 text-primary">
@@ -43,7 +43,7 @@ const LeaderCard = ({ leader, index }) => {
 
         <p className="text-sm text-muted-foreground flex items-center gap-1 mb-4">
           <MapPin className="w-3.5 h-3.5" />
-          {leader.constituency}
+          {leader.constituency_code}
         </p>
 
         {/* Quick Stats */}

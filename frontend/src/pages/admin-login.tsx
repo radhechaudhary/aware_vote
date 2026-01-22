@@ -6,11 +6,17 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Captcha from "@/components/captcha";
 import { useToast } from "@/hooks/use-toast";
 import axios from 'axios'
+import { replace, useNavigate } from "react-router-dom";
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 30; // seconds
 
 const AdminLogin = () => {
+  const navigate = useNavigate();
+  if (localStorage.getItem("ecLoggedIn") === "true") {
+    navigate('/ec-dashboard', { replace: true });
+  }
+  
   const { toast } = useToast();
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -64,51 +70,45 @@ const AdminLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isCaptchaValid) {
-      setErrors({ general: "Please complete the security verification" });
-      return;
-    }
 
     setIsLoading(true);
     setErrors({});
-
-    axios.post("http://localhost:3000/admin/login", {
-      username: formData.username,
+    try{
+      const res = await axios.post("http://localhost:3000/ec/login", {
+      id: formData.username,
       password: formData.password
-    });
+    }, {withCredentials:true});
 
-    // Demo: Check credentials (in production, this would be a secure API call)
-    const isValidCredentials = formData.username === "admin" && formData.password === "admin123";
+    const isValidCredentials = res.data.success;
 
     if (isValidCredentials) {
-      toast({
-        title: "Login Successful",
-        description: "Welcome back, Administrator",
-      });
-      // In production: redirect to dashboard
-    } else {
-      const newAttempts = loginAttempts + 1;
-      setLoginAttempts(newAttempts);
-      
-      if (newAttempts >= MAX_ATTEMPTS) {
-        startLockout();
-        setErrors({ 
-          general: `Too many failed attempts. Account locked for ${LOCKOUT_DURATION} seconds.` 
-        });
-      } else {
-        setErrors({ 
-          general: `Invalid credentials. ${MAX_ATTEMPTS - newAttempts} attempts remaining.` 
-        });
-      }
+      localStorage.setItem("ecLoggedIn", "true");
+      navigate('/ec-dashboard', {replace:true});
+      return;
     }
-
-    setIsLoading(false);
-  };
-
-  const isFormValid = formData.username.trim().length >= 3 && 
-                      formData.password.length >= 6 && 
-                      isCaptchaValid && 
-                      !isLocked;
+    else {
+          const newAttempts = loginAttempts + 1;
+          setLoginAttempts(newAttempts);
+          
+          if (newAttempts >= MAX_ATTEMPTS) {
+            startLockout();
+            setErrors({ 
+              general: `Too many failed attempts. Account locked for ${LOCKOUT_DURATION} seconds.` 
+            });
+          } else {
+            setErrors({ 
+              general: `Invalid credentials. ${MAX_ATTEMPTS - newAttempts} attempts remaining.` 
+            });
+          }
+        }
+        
+        setIsLoading(false);
+    }
+    catch (error) {
+      setIsLoading(false);
+      setErrors({ general: "An error occurred during login. Please try again." });
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
@@ -212,7 +212,7 @@ const AdminLogin = () => {
             <Button
               type="submit"
               className="w-full h-12 text-base font-semibold"
-              disabled={!isFormValid || isLoading}
+              disabled={isLoading}
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">

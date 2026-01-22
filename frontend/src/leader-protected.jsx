@@ -4,30 +4,31 @@ import axios from "axios";
 import NotFound from "./pages/NotFound";
 
 const LeaderProtectedRoute = () => {
-  const [isAuth, setIsAuth] = useState(null); 
+  const [isAuth, setIsAuth] = useState(true); 
 
-  useEffect(() => {
-    const validate = async () => {
-      try {
-        const res = await axios.get(
-          "http://localhost:3000/leader/validate",
-          {
-            withCredentials: true // REQUIRED for cookies
-          }
-        );
-        setIsAuth(res.data.valid);
-      } catch (err) {
-        setIsAuth(false);
-      }
-    };
+  // useEffect(() => {
+  //   const validate = async () => {
+  //     try {
+  //       const res = await axios.get(
+  //         "http://localhost:3000/leader/validate",
+  //         {},
+  //         {
+  //           withCredentials: true // REQUIRED for cookies
+  //         }
+  //       );
+  //       setIsAuth(res.data.valid);
+  //     } catch (err) {
+  //       setIsAuth(false);
+  //     }
+  //   };
 
-    validate();
-  }, []);
+  //   validate();
+  // }, []);
   if (isAuth === null) {
     return <div>Checking authentication...</div>;
   }
 
-  if (!isAuth) {
+  if (isAuth === false) {
     return <Navigate to="/leader-auth" replace />;
   }
 

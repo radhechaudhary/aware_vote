@@ -76,6 +76,7 @@ const Landing = () => {
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-20 hero-gradient overflow-hidden">
+        
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div
@@ -231,7 +232,7 @@ const Landing = () => {
             <div className="relative aspect-video rounded-2xl overflow-hidden bg-primary/10 glow-effect">
               <iframe
                 className="w-full h-full"
-                src="https://www.youtube.com/embed/dnz3WXZGVvc?si=lXa8-vAUkoyR15iL"
+                src="https://www.youtube.com/embed/3onWQSe_DBw?si=8RBKbrNcq8iPgK0R"
                 title="One Nation One Election"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
