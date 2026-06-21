@@ -150,10 +150,5 @@ The `/community/verifyMessage` route spawns a local Python script (`predict.py`)
 - [ ] Add automated tests
 - [ ] Containerize backend + Python classifier for easier deployment
 
-## Contributing
+### This is Protype purely built for election commission on India
 
-Issues and pull requests are welcome. If you're adding a feature, please open an issue first to discuss what you'd like to change.
-
-## License
-
-No license has been specified yet for this repository. Add a `LICENSE` file to clarify how others can use this project.
